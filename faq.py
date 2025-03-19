@@ -1,3 +1,9 @@
+import sys
+try:
+    import pysqlite3
+    sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")  # Force using updated SQLite
+except ImportError:
+    print("⚠️ pysqlite3-binary is missing. Install it using `pip install pysqlite3-binary`.")
 import os
 from pathlib import Path
 import chromadb
