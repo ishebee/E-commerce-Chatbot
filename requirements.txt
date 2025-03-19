@@ -7,4 +7,4 @@ langchain_community
 sentence-transformers
 semantic-router
 python-dotenv
-sqlite-utils
+pysqlite3-binary
