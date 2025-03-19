@@ -1,66 +1,82 @@
 import sys
+import os
 try:
     import pysqlite3
-    sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")  # Force using updated SQLite
+    sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")  # Force updated SQLite
 except ImportError:
     print("⚠️ pysqlite3-binary is missing. Install it using `pip install pysqlite3-binary`.")
-import os
+
 from pathlib import Path
 import chromadb
 from chromadb.utils import embedding_functions
-from groq import Groq
 import pandas as pd
 from dotenv import load_dotenv
-import streamlit as st
 
-# Load environment variables
 load_dotenv()
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-# ✅ Load API key from Streamlit Secrets
-GROQ_MODEL = st.secrets.get("GROQ_MODEL")
-
-if not GROQ_MODEL:
-    st.error("❌ GROQ_MODEL is missing in Streamlit Secrets! Set it in 'secrets.toml'.")
-
+# Define embedding function
 ef = embedding_functions.SentenceTransformerEmbeddingFunction(
     model_name='sentence-transformers/all-MiniLM-L6-v2'
 )
 
-faqs_path = Path(__file__).parent / "resources/faq_data.csv"
-chroma_client = chromadb.PersistentClient(path="faqs_db")  # Persist FAQ collection
-groq_client = Groq()
+# Use in-memory ChromaDB client (No Persistent Storage in Streamlit Cloud)
+chroma_client = chromadb.Client()
+
+# Collection name
 collection_name_faq = 'faqs'
+faqs_path = Path(__file__).parent / "resources/faq_data.csv"
 
 
 def ingest_faq_data(path):
-    """Ensures FAQ data is ingested into ChromaDB."""
-    collection_names = [c.name for c in chroma_client.list_collections()]
-    if collection_name_faq not in collection_names:
+    """Ensure the FAQ collection exists, reloading if necessary (Fix for Chroma v0.6.0)"""
+    print("Checking FAQ data in ChromaDB...")
+
+    try:
+        collection = chroma_client.get_collection(collection_name_faq)
+        print(f"✅ Collection `{collection_name_faq}` already exists.")
+    except Exception:
+        print(f"⚠️ Collection `{collection_name_faq}` not found. Creating new collection...")
         collection = chroma_client.create_collection(
-            name=collection_name_faq, embedding_function=ef
+            name=collection_name_faq,
+            embedding_function=ef
         )
-        df = pd.read_csv(path)
-        docs = df['question'].to_list()
-        metadata = [{'answer': ans} for ans in df['answer'].to_list()]
-        ids = [f"id_{i}" for i in range(len(docs))]
-        collection.add(documents=docs, metadatas=metadata, ids=ids)
-    else:
-        print(f"✅ Collection '{collection_name_faq}' already exists.")
+
+    # Load FAQs from CSV
+    df = pd.read_csv(path)
+    docs = df['question'].tolist()
+    metadata = [{'answer': ans} for ans in df['answer'].tolist()]
+    ids = [f"id_{i}" for i in range(len(docs))]
+
+    # Add FAQs to ChromaDB
+    collection.add(
+        documents=docs,
+        metadatas=metadata,
+        ids=ids
+    )
+    
+    print(f"✅ FAQ Data successfully loaded into ChromaDB: `{collection_name_faq}`")
+
+
+# ✅ Ensure FAQ data is loaded at startup
+ingest_faq_data(faqs_path)
+
+
+def get_relevant_qa(query):
+    """Retrieve relevant answers from ChromaDB."""
+    collection = chroma_client.get_collection(name=collection_name_faq)
+    result = collection.query(
+        query_texts=[query],
+        n_results=2
+    )
+    return result
 
 
 def faq_chain(query):
-    """Queries FAQ system and returns an answer."""
-    collection = chroma_client.get_collection(
-        name=collection_name_faq, embedding_function=ef
-    )
-    result = collection.query(query_texts=[query], n_results=2)
-    if not result["documents"]:
-        return "I don't know."
+    """Retrieve and return the most relevant answer from FAQs."""
+    result = get_relevant_qa(query)
+    if not result or not result['metadatas'][0]:
+        return "I don't know the answer."
 
-    context = "".join([r.get('answer', '') for r in result['metadatas'][0]])
-    return generate_answer(query, context)
-
-
-# ✅ Ensure functions are properly exported
-__all__ = ["ingest_faq_data", "faq_chain"]
+    context = "".join([r.get('answer') for r in result['metadatas'][0]])
+    return context
