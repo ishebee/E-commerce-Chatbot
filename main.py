@@ -4,10 +4,6 @@ from sql import sql_chain
 from pathlib import Path
 from router import router
 
-# ✅ Load API key from Streamlit Secrets (Not .env)
-if "GROQ_API_KEY" not in st.secrets:
-    st.error("❌ GROQ_API_KEY is missing in Streamlit Secrets! Set it in 'secrets.toml'.")
-
 faqs_path = Path(__file__).parent / "resources/faq_data.csv"
 ingest_faq_data(faqs_path)
 
@@ -21,9 +17,9 @@ def ask(query):
     else:
         return f"Route {route} not implemented yet"
 
-st.title("E-commerce Bot")
+st.title("E-commerce Chatbot")
 
-query = st.chat_input("Write your query")
+query = st.chat_input("Ask a question...")
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
@@ -35,7 +31,7 @@ for message in st.session_state.messages:
 if query:
     with st.chat_message("user"):
         st.markdown(query)
-    st.session_state.messages.append({"role": "user", "content": query})
+    st.session_state.messages.append({"role":"user", "content":query})
 
     response = ask(query)
     with st.chat_message("assistant"):
