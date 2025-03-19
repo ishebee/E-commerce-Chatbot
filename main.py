@@ -4,9 +4,11 @@ from sql import sql_chain
 from pathlib import Path
 from router import router
 
+# Load API Key from Streamlit Secrets
+GROQ_MODEL = st.secrets["GROQ_MODEL"]
+
 faqs_path = Path(__file__).parent / "resources/faq_data.csv"
 ingest_faq_data(faqs_path)
-
 
 def ask(query):
     route = router(query).name
