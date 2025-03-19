@@ -1,8 +1,10 @@
 streamlit
-chromadb
-sentence-transformers
 groq
-pandas
 sqlite3
-python-dotenv
+pandas
+chromadb
+langchain
+langchain_community
+sentence-transformers
 semantic-router
+python-dotenv
