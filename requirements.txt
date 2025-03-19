@@ -1,6 +1,5 @@
 streamlit
 groq
-sqlite3
 pandas
 chromadb
 langchain
@@ -8,3 +7,4 @@ langchain_community
 sentence-transformers
 semantic-router
 python-dotenv
+sqlite-utils
