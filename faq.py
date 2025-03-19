@@ -20,8 +20,8 @@ ef = embedding_functions.SentenceTransformerEmbeddingFunction(
     model_name='sentence-transformers/all-MiniLM-L6-v2'
 )
 
-# Use in-memory ChromaDB client (No Persistent Storage in Streamlit Cloud)
-chroma_client = chromadb.Client()
+# ✅ Use **EphemeralClient** instead of Client (Fix for Streamlit Cloud)
+chroma_client = chromadb.EphemeralClient()
 
 # Collection name
 collection_name_faq = 'faqs'
@@ -42,20 +42,20 @@ def ingest_faq_data(path):
             embedding_function=ef
         )
 
-    # Load FAQs from CSV
-    df = pd.read_csv(path)
-    docs = df['question'].tolist()
-    metadata = [{'answer': ans} for ans in df['answer'].tolist()]
-    ids = [f"id_{i}" for i in range(len(docs))]
+        # Load FAQs from CSV
+        df = pd.read_csv(path)
+        docs = df['question'].tolist()
+        metadata = [{'answer': ans} for ans in df['answer'].tolist()]
+        ids = [f"id_{i}" for i in range(len(docs))]
 
-    # Add FAQs to ChromaDB
-    collection.add(
-        documents=docs,
-        metadatas=metadata,
-        ids=ids
-    )
-    
-    print(f"✅ FAQ Data successfully loaded into ChromaDB: `{collection_name_faq}`")
+        # Add FAQs to ChromaDB
+        collection.add(
+            documents=docs,
+            metadatas=metadata,
+            ids=ids
+        )
+
+        print(f"✅ FAQ Data successfully loaded into ChromaDB: `{collection_name_faq}`")
 
 
 # ✅ Ensure FAQ data is loaded at startup
