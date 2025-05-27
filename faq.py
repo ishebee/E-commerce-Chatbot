@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+_ = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+
 
 # Define embedding function
 ef = embedding_functions.SentenceTransformerEmbeddingFunction(
