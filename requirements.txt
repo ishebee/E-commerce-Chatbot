@@ -4,7 +4,8 @@ pandas
 chromadb
 langchain
 langchain_community
-sentence-transformers
+sentence-transformers==2.2.2
+transformers==4.30.2
 semantic-router
 python-dotenv
 pysqlite3-binary
