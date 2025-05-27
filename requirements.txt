@@ -5,6 +5,7 @@ chromadb
 langchain
 langchain_community
 sentence-transformers
+transformers
 semantic-router
 python-dotenv
 pysqlite3-binary
