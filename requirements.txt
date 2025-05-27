@@ -8,3 +8,6 @@ sentence-transformers
 semantic-router
 python-dotenv
 pysqlite3-binary
+protobuf==3.20.3
+opentelemetry-api==1.22.0
+opentelemetry-exporter-otlp==1.22.0
