@@ -11,6 +11,7 @@ import chromadb
 from chromadb.utils import embedding_functions
 import pandas as pd
 from dotenv import load_dotenv
+from sentence_transformers import SentenceTransformer
 
 load_dotenv()
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
